@@ -21,7 +21,7 @@ class CategoryChip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected ? theme.primaryColor.withOpacity(0.1) : Colors.grey[100],
           borderRadius: BorderRadius.circular(20),
@@ -30,27 +30,32 @@ class CategoryChip extends StatelessWidget {
             width: isSelected ? 1.5 : 1,
           ),
         ),
+        constraints: const BoxConstraints(minWidth: 70, minHeight: 60, maxHeight: 60),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               _getIconData(category.icon),
               color: isSelected ? theme.primaryColor : Colors.grey[700],
-              size: 24,
+              size: 18,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 1),
             Text(
               category.name,
               style: TextStyle(
                 color: isSelected ? theme.primaryColor : Colors.grey[800],
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 12,
+                fontSize: 10,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             if (category.jobCount > 0) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 1),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
                   color: isSelected ? theme.primaryColor : Colors.grey[200],
                   borderRadius: BorderRadius.circular(10),
