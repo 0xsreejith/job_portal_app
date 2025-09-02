@@ -39,6 +39,116 @@ class JobRepository {
     }
   }
 
+  // Saved Jobs Methods
+  
+  // Save a job for later
+  Future<void> saveJob(String userId, String jobId) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .doc(jobId)
+        .set({'savedAt': FieldValue.serverTimestamp()});
+  }
+
+  // Remove a saved job
+  Future<void> removeSavedJob(String userId, String jobId) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .doc(jobId)
+        .delete();
+  }
+
+  // Check if a job is saved
+  Future<bool> isJobSaved(String userId, String jobId) async {
+    final doc = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .doc(jobId)
+        .get();
+    return doc.exists;
+  }
+
+  // Get all saved jobs for a user
+  Stream<List<JobModel>> getSavedJobs(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .snapshots()
+        .asyncMap((savedJobsSnapshot) async {
+      if (savedJobsSnapshot.docs.isEmpty) return [];
+      
+      final jobIds = savedJobsSnapshot.docs.map((doc) => doc.id).toList();
+      final jobsSnapshot = await _firestore
+          .collection('jobs')
+          .where(FieldPath.documentId, whereIn: jobIds)
+          .get();
+          
+      return jobsSnapshot.docs
+          .map((doc) => JobModel.fromMap(
+              Map<String, dynamic>.from(doc.data())..['id'] = doc.id))
+          .toList();
+    });
+  }
+
+  // Save a job for later
+  Future<void> saveJobForUser(String userId, String jobId) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .doc(jobId)
+        .set({'savedAt': FieldValue.serverTimestamp()});
+  }
+
+  // Remove a saved job
+  Future<void> removeSavedJob(String userId, String jobId) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .doc(jobId)
+        .delete();
+  }
+
+  // Check if a job is saved
+  Future<bool> isJobSaved(String userId, String jobId) async {
+    final doc = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .doc(jobId)
+        .get();
+    return doc.exists;
+  }
+
+  // Get all saved jobs for a user
+  Stream<List<JobModel>> getSavedJobsForUser(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('saved_jobs')
+        .snapshots()
+        .asyncMap((savedJobsSnapshot) async {
+      if (savedJobsSnapshot.docs.isEmpty) return [];
+      
+      final jobIds = savedJobsSnapshot.docs.map((doc) => doc.id).toList();
+      final jobsSnapshot = await _firestore
+          .collection('jobs')
+          .where(FieldPath.documentId, whereIn: jobIds)
+          .get();
+          
+      return jobsSnapshot.docs
+          .map((doc) => JobModel.fromMap(
+              Map<String, dynamic>.from(doc.data())..['id'] = doc.id))
+          .toList();
+    });
+  }
+
   // Get all jobs with optional filters
   Stream<List<JobModel>> getJobs({
     String? employerId,

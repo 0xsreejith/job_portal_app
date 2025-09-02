@@ -61,25 +61,42 @@ class JobModel {
     };
   }
 
+  // Helper method to safely convert dynamic list to List<String>
+  static List<String> _parseStringList(dynamic list) {
+    if (list == null) return [];
+    if (list is List) {
+      return list.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    return [];
+  }
+
   // Create JobModel from a Map
   factory JobModel.fromMap(Map<String, dynamic> map) {
     return JobModel(
-      id: map['id'] ?? '',
-      employerId: map['employerId'] ?? '',
-      title: map['title'] ?? '',
-      description: map['description'] ?? '',
-      location: map['location'] ?? '',
-      salary: (map['salary'] ?? 0.0).toDouble(),
-      jobType: map['jobType'] ?? 'Full-time',
-      requirements: List<String>.from(map['requirements'] ?? []),
-      skillsRequired: List<String>.from(map['skillsRequired'] ?? []),
-      postedDate: (map['postedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      applicationDeadline: (map['applicationDeadline'] as Timestamp?)?.toDate(),
-      isActive: map['isActive'] ?? true,
-      companyName: map['companyName'],
-      companyLogo: map['companyLogo'],
-      experienceLevel: map['experienceLevel'],
-      category: map['category'],
+      id: map['id']?.toString() ?? '',
+      employerId: map['employerId']?.toString() ?? '',
+      title: map['title']?.toString() ?? '',
+      description: map['description']?.toString() ?? '',
+      location: map['location']?.toString() ?? '',
+      salary: (map['salary'] is num ? (map['salary'] as num).toDouble() : 0.0),
+      jobType: map['jobType']?.toString() ?? 'Full-time',
+      requirements: _parseStringList(map['requirements']),
+      skillsRequired: _parseStringList(map['skillsRequired']),
+      postedDate: (map['postedDate'] is Timestamp)
+          ? (map['postedDate'] as Timestamp).toDate()
+          : (map['postedDate'] is int)
+              ? DateTime.fromMillisecondsSinceEpoch(map['postedDate'])
+              : DateTime.now(),
+      applicationDeadline: (map['applicationDeadline'] is Timestamp)
+          ? (map['applicationDeadline'] as Timestamp).toDate()
+          : (map['applicationDeadline'] is int)
+              ? DateTime.fromMillisecondsSinceEpoch(map['applicationDeadline'])
+              : null,
+      isActive: map['isActive'] == true,
+      companyName: map['companyName']?.toString(),
+      companyLogo: map['companyLogo']?.toString(),
+      experienceLevel: map['experienceLevel']?.toString(),
+      category: map['category']?.toString(),
     );
   }
 
