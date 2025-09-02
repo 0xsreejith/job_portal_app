@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "941820651819",
+    "project_id": "sree-new-1dd37",
+    "storage_bucket": "sree-new-1dd37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941820651819:android:b5eeb69e3d1a07cbda3d6e",
+        "android_client_info": {
+          "package_name": "com.example.job_finder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcHhRJakSefhUhwMhYD1RDg8TgRJ_vgaI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941820651819:android:f72c25d2414b3063da3d6e",
+        "android_client_info": {
+          "package_name": "com.example.job_portal_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcHhRJakSefhUhwMhYD1RDg8TgRJ_vgaI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
