@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:job_portal_app/controllers/auth_controller.dart';
+import 'package:job_portal_app/controllers/job_controller.dart';
+import 'package:job_portal_app/repositories/job_repository.dart';
 import 'package:job_portal_app/repositories/user_repository.dart';
 import 'package:job_portal_app/screens/login_screen.dart';
 import 'package:job_portal_app/screens/signup_screen.dart';
 import 'package:job_portal_app/screens/seeker/seeker_home_screen.dart';
 import 'package:job_portal_app/screens/employer/employer_home_screen.dart';
-import 'firebase_options.dart'; 
+import 'package:job_portal_app/screens/job_details_screen.dart';
+import 'package:job_portal_app/models/job_model.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,11 +21,13 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     
-    // Initialize services
+    // Initialize repositories
     Get.put(UserRepository(), permanent: true);
+    Get.put(JobRepository(), permanent: true);
     
     // Initialize controllers
     Get.put(AuthController(), permanent: true);
+    Get.put(JobController(), permanent: true);
     
     runApp(const MyApp());
   } catch (e) {
@@ -84,6 +90,25 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/signup', page: () => SignupScreen()),
         GetPage(name: '/seeker', page: () => SeekerHomeScreen()),
         GetPage(name: '/employer', page: () => EmployerHomeScreen()),
+        GetPage(name: '/job_details', page: () {
+          final jobId = Get.arguments as String;
+          return FutureBuilder<JobModel?>(
+            future: Get.find<JobRepository>().getJobById(jobId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (!snapshot.hasData || snapshot.data == null) {
+                return const Scaffold(
+                  body: Center(child: Text('Job not found')),
+                );
+              }
+              return JobDetailsScreen(job: snapshot.data!);
+            },
+          );
+        }),
       ],
     );
   }

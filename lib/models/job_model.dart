@@ -70,34 +70,66 @@ class JobModel {
     return [];
   }
 
+  // Helper method to safely parse DateTime from dynamic value
+  static DateTime? _parseDateTime(dynamic value) {
+    try {
+      if (value == null) return null;
+      if (value is Timestamp) return value.toDate();
+      if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    } catch (e) {
+      print('Error parsing date: $e');
+      return null;
+    }
+  }
+
   // Create JobModel from a Map
   factory JobModel.fromMap(Map<String, dynamic> map) {
-    return JobModel(
-      id: map['id']?.toString() ?? '',
-      employerId: map['employerId']?.toString() ?? '',
-      title: map['title']?.toString() ?? '',
-      description: map['description']?.toString() ?? '',
-      location: map['location']?.toString() ?? '',
-      salary: (map['salary'] is num ? (map['salary'] as num).toDouble() : 0.0),
-      jobType: map['jobType']?.toString() ?? 'Full-time',
-      requirements: _parseStringList(map['requirements']),
-      skillsRequired: _parseStringList(map['skillsRequired']),
-      postedDate: (map['postedDate'] is Timestamp)
-          ? (map['postedDate'] as Timestamp).toDate()
-          : (map['postedDate'] is int)
-              ? DateTime.fromMillisecondsSinceEpoch(map['postedDate'])
-              : DateTime.now(),
-      applicationDeadline: (map['applicationDeadline'] is Timestamp)
-          ? (map['applicationDeadline'] as Timestamp).toDate()
-          : (map['applicationDeadline'] is int)
-              ? DateTime.fromMillisecondsSinceEpoch(map['applicationDeadline'])
-              : null,
-      isActive: map['isActive'] == true,
-      companyName: map['companyName']?.toString(),
-      companyLogo: map['companyLogo']?.toString(),
-      experienceLevel: map['experienceLevel']?.toString(),
-      category: map['category']?.toString(),
-    );
+    try {
+      if (map.isEmpty) throw ArgumentError('Empty map provided to JobModel.fromMap');
+      
+      // Parse required fields with null checks
+      final id = map['id']?.toString() ?? '';
+      final employerId = map['employerId']?.toString() ?? '';
+      final title = map['title']?.toString() ?? '';
+      final description = map['description']?.toString() ?? '';
+      final location = map['location']?.toString() ?? '';
+      
+      // Parse salary with fallback to 0.0 if invalid
+      double salary;
+      try {
+        salary = (map['salary'] is num) 
+            ? (map['salary'] as num).toDouble() 
+            : double.tryParse(map['salary']?.toString() ?? '0.0') ?? 0.0;
+      } catch (e) {
+        print('Error parsing salary: $e');
+        salary = 0.0;
+      }
+      
+      return JobModel(
+        id: id,
+        employerId: employerId,
+        title: title,
+        description: description,
+        location: location,
+        salary: salary,
+        jobType: map['jobType']?.toString() ?? 'Full-time',
+        requirements: _parseStringList(map['requirements']),
+        skillsRequired: _parseStringList(map['skillsRequired']),
+        postedDate: _parseDateTime(map['postedDate']) ?? DateTime.now(),
+        applicationDeadline: _parseDateTime(map['applicationDeadline']),
+        isActive: map['isActive'] == true,
+        companyName: map['companyName']?.toString(),
+        companyLogo: map['companyLogo']?.toString(),
+        experienceLevel: map['experienceLevel']?.toString(),
+        category: map['category']?.toString(),
+      );
+    } catch (e) {
+      print('Error creating JobModel from map: $e');
+      print('Map data: $map');
+      rethrow; // Re-throw to allow error handling upstream
+    }
   }
 
   // Create a copy of JobModel with some fields updated

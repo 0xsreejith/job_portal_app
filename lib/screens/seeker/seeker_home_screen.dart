@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../controllers/job_controller.dart';
 import '../../models/category_model.dart';
 import '../../models/job_model.dart';
+import '../../screens/profile_screen.dart';
+import '../../screens/saved_jobs_screen.dart';
 import '../../widgets/shared/category_chip.dart';
 import '../../widgets/shared/job_card.dart';
-import '../../widgets/shared/search_bar.dart';
+
+// Tab navigation enum
+enum _SeekerTab { home, saved, profile }
 
 class SeekerHomeScreen extends StatefulWidget {
   const SeekerHomeScreen({Key? key}) : super(key: key);
@@ -15,47 +20,58 @@ class SeekerHomeScreen extends StatefulWidget {
 
 class _SeekerHomeScreenState extends State<SeekerHomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final JobController _jobController = Get.find<JobController>();
   int _selectedCategoryIndex = 0;
   int _currentIndex = 0;
 
-  // Sample data - Replace with actual data from your backend
-  final List<CategoryModel> _categories = [
-    CategoryModel(id: '1', name: 'All', icon: 'work', jobCount: 120),
-    CategoryModel(id: '2', name: 'Development', icon: 'code', jobCount: 45),
-    CategoryModel(id: '3', name: 'Design', icon: 'design', jobCount: 32),
-    CategoryModel(id: '4', name: 'Marketing', icon: 'business', jobCount: 28),
-    CategoryModel(id: '5', name: 'Finance', icon: 'attach_money', jobCount: 15),
+  @override
+  void initState() {
+    super.initState();
+    _loadJobs();
+  }
+
+  // Load jobs from the controller
+  void _loadJobs() {
+    _jobController.loadAllJobs();
+    // Update category counts when jobs are loaded
+    ever(_jobController.isLoading, (isLoading) {
+      if (!isLoading) {
+        _updateCategoryCounts();
+      }
+    });
+  }
+
+  // Categories for filtering
+  final List<Map<String, dynamic>> _categories = [
+    {'id': '1', 'name': 'All', 'icon': 'work', 'jobCount': 0},
+    {'id': '2', 'name': 'Development', 'icon': 'code', 'jobCount': 0},
+    {'id': '3', 'name': 'Design', 'icon': 'design', 'jobCount': 0},
+    {'id': '4', 'name': 'Marketing', 'icon': 'business', 'jobCount': 0},
+    {'id': '5', 'name': 'Finance', 'icon': 'attach_money', 'jobCount': 0},
   ];
 
-  // Sample jobs - Replace with actual data from your backend
-  final List<JobModel> _jobs = [
-    JobModel(
-      id: '1',
-      employerId: 'emp1',
-      title: 'Senior Flutter Developer',
-      description: 'We are looking for an experienced Flutter developer...',
-      location: 'Remote',
-      salary: 8000,
-      jobType: 'Full-time',
-      requirements: ['3+ years of Flutter experience', 'Strong Dart skills'],
-      skillsRequired: ['Flutter', 'Dart', 'Firebase'],
-      companyName: 'TechCorp',
-      category: 'Development',
-    ),
-    JobModel(
-      id: '2',
-      employerId: 'emp2',
-      title: 'UI/UX Designer',
-      description: 'Looking for a creative UI/UX designer...',
-      location: 'New York, NY',
-      salary: 7000,
-      jobType: 'Full-time',
-      requirements: ['2+ years of UI/UX experience', 'Portfolio required'],
-      skillsRequired: ['Figma', 'Sketch', 'Adobe XD'],
-      companyName: 'DesignHub',
-      category: 'Design',
-    ),
-  ];
+  // Get filtered jobs based on search and category
+  List<JobModel> get _filteredJobs {
+    var jobs = _jobController.allJobs;
+
+    // Apply search filter
+    final searchQuery = _searchController.text.toLowerCase();
+    if (searchQuery.isNotEmpty) {
+      jobs = jobs.where((job) {
+        return job.title.toLowerCase().contains(searchQuery) ||
+            (job.companyName?.toLowerCase().contains(searchQuery) ?? false) ||
+            job.location.toLowerCase().contains(searchQuery);
+      }).toList();
+    }
+
+    // Apply category filter
+    final selectedCategory = _categories[_selectedCategoryIndex]['name'];
+    if (selectedCategory != 'All') {
+      jobs = jobs.where((job) => job.category == selectedCategory).toList();
+    }
+
+    return jobs;
+  }
 
   @override
   void dispose() {
@@ -63,196 +79,152 @@ class _SeekerHomeScreenState extends State<SeekerHomeScreen> {
     super.dispose();
   }
 
+  // Update job count for each category
+  void _updateCategoryCounts() {
+    final jobs = _jobController.allJobs;
+    for (var i = 0; i < _categories.length; i++) {
+      if (_categories[i]['name'] == 'All') {
+        _categories[i]['jobCount'] = jobs.length;
+      } else {
+        _categories[i]['jobCount'] = jobs.where((job) => job.category == _categories[i]['name']).length;
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
+  // Handle tab changes
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  // Build the appropriate screen based on the selected tab
+  Widget _buildCurrentScreen() {
+    switch (_SeekerTab.values[_currentIndex]) {
+      case _SeekerTab.home:
+        return _buildHomeScreen();
+      case _SeekerTab.saved:
+        return const SavedJobsScreen();
+      case _SeekerTab.profile:
+        return const ProfileScreen();
+    }
+  }
+
+  Widget _buildHomeScreen() {
+    return Column(
+      children: [
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search jobs...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+
+        // Categories
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            itemCount: _categories.length,
+            itemBuilder: (context, index) {
+              final category = CategoryModel.fromMap(_categories[index]);
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: CategoryChip(
+                  category: category,
+                  isSelected: _selectedCategoryIndex == index,
+                  onTap: () {
+                    setState(() {
+                      _selectedCategoryIndex = index;
+                    });
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+
+        // Job list
+        Expanded(
+          child: Obx(() {
+            if (_jobController.isLoading.value && _jobController.allJobs.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final jobs = _filteredJobs;
+
+            if (jobs.isEmpty) {
+              return const Center(
+                child: Text('No jobs found. Try adjusting your search or filters.'),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(8.0),
+              itemCount: jobs.length,
+              itemBuilder: (context, index) {
+                final job = jobs[index];
+                return JobCard(
+                  job: job,
+                  onTap: () {
+                    // Navigate to job details
+                    Get.toNamed('/job_details', arguments: job.id);
+                  },
+                );
+              },
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Find Your Dream Job'),
-        elevation: 0,
+        title: const Text('Find Jobs'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none),
             onPressed: () {
-              // Navigate to notifications
+              // Show notification snackbar
+              Get.snackbar('Notifications', 'No new notifications');
             },
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Greeting
-              const Text(
-                'Hello, Job Seeker!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Find your perfect job',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Search Bar
-              CustomSearchBar(
-                controller: _searchController,
-                onChanged: (value) {
-                  // Handle search
-                },
-                onSearchPressed: () {
-                  // Handle search
-                },
-                onFilterPressed: () {
-                  // Show filter options
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Categories
-              Text(
-                'Categories',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    return CategoryChip(
-                      category: _categories[index],
-                      isSelected: _selectedCategoryIndex == index,
-                      onTap: () {
-                        setState(() {
-                          _selectedCategoryIndex = index;
-                          // Filter jobs by category
-                        });
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Popular Jobs
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Popular Jobs',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      // Navigate to all jobs
-                    },
-                    child: const Text('See All'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Job List
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _jobs.length,
-                itemBuilder: (context, index) {
-                  final job = _jobs[index];
-                  return JobCard(
-                    job: job,
-                    onTap: () {
-                      // Navigate to job details
-                      // Get.to(() => JobDetailsScreen(job: job));
-                    },
-                    onSave: () {
-                      // Save job
-                      _saveJob(job);
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: _buildCurrentScreen(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-            // Handle navigation
-            switch (index) {
-              case 0:
-                // Already on home
-                break;
-              case 1:
-                // Navigate to search
-                // Get.to(() => SearchScreen());
-                break;
-              case 2:
-                // Navigate to saved
-                // Get.to(() => SavedJobsScreen());
-                break;
-              case 3:
-                // Navigate to profile
-                // Get.to(() => ProfileScreen());
-                break;
-            }
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).primaryColor,
-        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.bookmark_border),
-            activeIcon: Icon(Icons.bookmark),
             label: 'Saved',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],
       ),
-    );
-  }
-
-  void _saveJob(JobModel job) {
-    // Implement save job functionality
-    Get.snackbar(
-      'Job Saved',
-      '${job.title} has been saved to your list',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
     );
   }
 }
