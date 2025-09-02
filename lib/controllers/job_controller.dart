@@ -32,9 +32,8 @@ class JobController extends GetxController {
       isLoading.value = true;
       await _jobRepository.createJob(job);
       await getEmployerJobs(job.employerId);
-      Get.snackbar('Success', 'Job posted successfully!');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to post job: $e');
+    // Get.snackbar('Error', 'Failed to post job: $e');
     } finally {
       isLoading.value = false;
     }
@@ -63,9 +62,8 @@ class JobController extends GetxController {
       isLoading.value = true;
       await _jobRepository.updateJob(job);
       await getEmployerJobs(job.employerId);
-      Get.snackbar('Success', 'Job updated successfully!');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update job: $e');
+  //    Get.snackbar('Error', 'Failed to update job: $e');
     } finally {
       isLoading.value = false;
     }
@@ -76,9 +74,8 @@ class JobController extends GetxController {
       isLoading.value = true;
       await _jobRepository.deleteJob(jobId);
       await getEmployerJobs(employerId);
-      Get.snackbar('Success', 'Job deleted successfully!');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete job: $e');
+   //   Get.snackbar('Error', 'Failed to delete job: $e');
     } finally {
       isLoading.value = false;
     }
@@ -94,11 +91,11 @@ class JobController extends GetxController {
         _savedJobs.assignAll(jobs);
         isLoading.value = false;
       }, onError: (e) {
-        Get.snackbar('Error', 'Failed to load saved jobs: $e');
+    //    Get.snackbar('Error', 'Failed to load saved jobs: $e');
         isLoading.value = false;
       });
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load saved jobs: $e');
+   ///   Get.snackbar('Error', 'Failed to load saved jobs: $e');
       isLoading.value = false;
     }
   }
@@ -111,17 +108,15 @@ class JobController extends GetxController {
       if (isSaved) {
         await _jobRepository.removeSavedJob(userId, jobId);
         _savedJobs.removeWhere((job) => job.id == jobId);
-        Get.snackbar('Success', 'Job removed from saved jobs');
       } else {
         await _jobRepository.saveJobForUser(userId, jobId);
         final job = await _jobRepository.getJobById(jobId);
         if (job != null) {
           _savedJobs.add(job);
-          Get.snackbar('Success', 'Job saved successfully');
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update saved jobs: $e');
+    //  Get.snackbar('Error', 'Failed to update saved jobs: $e');
       rethrow;
     } finally {
       isLoading.value = false;
@@ -138,11 +133,11 @@ class JobController extends GetxController {
         _applications.assignAll(apps);
         isLoading.value = false;
       }, onError: (e) {
-        Get.snackbar('Error', 'Failed to load applications: $e');
+    //    Get.snackbar('Error', 'Failed to load applications: $e');
         isLoading.value = false;
       });
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load applications: $e');
+  //    Get.snackbar('Error', 'Failed to load applications: $e');
       isLoading.value = false;
     }
   }
@@ -156,11 +151,11 @@ class JobController extends GetxController {
         _applications.assignAll(apps);
         isLoading.value = false;
       }, onError: (e) {
-        Get.snackbar('Error', 'Failed to load applications: $e');
+ //       Get.snackbar('Error', 'Failed to load applications: $e');
         isLoading.value = false;
       });
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load applications: $e');
+ //     Get.snackbar('Error', 'Failed to load applications: $e');
       isLoading.value = false;
     }
   }
@@ -179,7 +174,7 @@ class JobController extends GetxController {
       });
     } catch (e) {
       debugPrint('Exception in loadAllJobs: $e');
-      Get.snackbar('Error', 'Failed to load jobs: $e');
+    //  Get.snackbar('Error', 'Failed to load jobs: $e');
       isLoading.value = false;
     }
   }
@@ -206,9 +201,8 @@ class JobController extends GetxController {
     try {
       isLoading.value = true;
       await _jobRepository.createApplication(application);
-      Get.snackbar('Success', 'Application submitted successfully!');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to submit application: $e');
+  //    Get.snackbar('Error', 'Failed to submit application: $e');
       rethrow;
     } finally {
       isLoading.value = false;
@@ -220,7 +214,7 @@ class JobController extends GetxController {
       isLoading.value = true;
       return await _jobRepository.getApplicationById(applicationId);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load application: $e');
+  //    Get.snackbar('Error', 'Failed to load application: $e');
       return null;
     } finally {
       isLoading.value = false;
@@ -256,18 +250,17 @@ class JobController extends GetxController {
         _applications[index] = updatedApp;
         _applications.refresh();
       }
-
-      Get.snackbar('Success', 'Application status updated');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update application status: $e');
+  //    Get.snackbar('Error', 'Failed to update application status: $e');
       rethrow;
     } finally {
       isLoading.value = false;
     }
   }
-bool isSavedJob(String jobId) {
-  return _savedJobs.any((job) => job.id == jobId);
-}
+
+  bool isSavedJob(String jobId) {
+    return _savedJobs.any((job) => job.id == jobId);
+  }
 
   // -------------------- CLEANUP --------------------
   @override
